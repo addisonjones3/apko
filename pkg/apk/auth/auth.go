@@ -67,11 +67,21 @@ type EnvAuth struct{}
 func (e EnvAuth) AddAuth(_ context.Context, req *http.Request) error {
 	env := os.Getenv("HTTP_AUTH")
 	parts := strings.Split(env, ":")
-	if len(parts) != 4 || parts[0] != "basic" {
-		return nil
-	}
-	if req.URL.Host == parts[1] {
-		req.SetBasicAuth(parts[2], parts[3])
+	switch parts[0] {
+	case "basic":
+		if len(parts) != 4 {
+			return nil
+		}
+		if req.URL.Host == parts[1] {
+			req.SetBasicAuth(parts[2], parts[3])
+		}
+	case "bearer":
+		if len(parts) != 3 {
+			return nil
+		}
+		if req.URL.Host == parts[1] {
+			req.Header.Set("Authorization", "Bearer "+parts[2])
+		}
 	}
 	return nil
 }
